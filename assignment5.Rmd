@@ -1,0 +1,24 @@
+---
+title: "Assignment5"
+author: "Claire Powers"
+date: "March 15, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+Polar bear projection model
+
+*Life cycle model*
+$n(t+1) = A_t*n(t)$
+
+```{r}
+
+A <- matrix(data=c(0.02115, 0.074, 0.0846,
+                   0.563,   0,     0, 
+                   0,       0.563, 0.563),
+            nrow=3, ncol=3, byrow=TRUE)
+
+```
+

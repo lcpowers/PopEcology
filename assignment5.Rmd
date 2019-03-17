@@ -2,7 +2,9 @@
 title: "Assignment5"
 author: "Claire Powers"
 date: "March 15, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -14,23 +16,72 @@ Polar bear projection model
 $n(t+1) = A_t*n(t)$
 
 ```{r}
+library(popbio)
+
 # Survival of each stage
-sigma_1to3 <- 0.916
-sigma_4_6 <- 0.947
-sigma_5 <- 0.950
-sigma_7to9 <- 0.870
-sigma_10 <- 0.933
-sigma_litter <- 0.496
+
+# Females
+sg_1.3 <- 0.916 # Pr(survival) for stages 1 through 3
+sg_4_6 <- 0.947 # Pr(survival) for stages 4 & 6
+sg_5 <- 0.950   # Pr(survival) for stage 5
+sg_l0 <- 0.496  # Pr(survival) that at least one cub survives
+sg_l1 <- 0.614  # Pr(survival) that a least one yearling survives
 
 # Probability of breeding for females
-beta_4 <- 0.437
-beta_5 <- 0.104
+B_4 <- 0.437 # Pr(breeding) for stage 4 female
+B_5 <- 0.104 # Pr(breeding) for stage 5 female
 
-# Population Matrix
-A <- matrix(data=c(0.02115, 0.074, 0.0846,
-                   0.563,   0,     0, 
-                   0,       0.563, 0.563),
-            nrow=3, ncol=3, byrow=TRUE)
+# Expected litter size that survives 2 years and can potentially move to stage 1 (wean)
+f <- 2 # Average number of 2 year olds in a surviving yearling litter. 1 to 3 is the estimate, 
+       # so will use all three in sensitivity analysis
 
+# Males
+sigma_7.9 <- 0.870 # Pr(survival) for stages 7 through 9
+sigma_10 <- 0.933  # Pr(survival) for stage 10
+
+# A <- matrix(data=c(0,      0,      0,               0,                     0, (sg_4_6*sg_l1*f)/2,
+#               sg_1.3,      0,      0,               0,                     0,                  0,
+#                    0, sg_1.3,      0,               0,                     0,                  0,
+#                    0,      0, sg_1.3,  sg_4_6*(1-B_4), sg_5*(1-sg_l0)*(1-B_5),            sg_4_6,
+#                    0,      0,      0,      sg_4_6*B_4,     sg_5*(1-sg_l0)*B_5,                 0,
+#                    0,      0,      0,               0,             sg_5*sg_l0,                 0),
+#             nrow=6, ncol=6, byrow=TRUE)
+
+A_good <- matrix(data=c(0,      0,      0,       0,          0,  0.5811,
+                   0.9858,      0,      0,       0,          0,       0,
+                        0, 0.9858,      0,       0,          0,       0,
+                        0,      0, 0.9858,  0.5061,     0.3971,  0.9918,
+                        0,      0,      0,  0.4857,     0.0681,       0,
+                        0,      0,      0,       0,     0.5433,       0),
+            nrow=6, ncol=6, byrow=TRUE)
+
+
+A_bad <- matrix(data=c(0,       0,      0,       0,          0,  0.5811,
+                   0.6578,      0,      0,       0,          0,       0,
+                        0, 0.6578,      0,       0,          0,       0,
+                        0,      0, 0.6578,  0.5367,     0.4243,  0.7587,
+                        0,      0,      0,  0.2220,     0.0327,       0,
+                        0,      0,      0,       0,     0.2689,       0),
+            nrow=6, ncol=6, byrow=TRUE)
+
+
+# Rename matrix columns
+colnames(A) <- c("2 year", "3 year", "4 year", "no cubs", "with cubs", "with yrlng")
+colnames(A_good) <- c("2 year", "3 year", "4 year", "no cubs", "with cubs", "with yrlng")
+colnames(A_bad) <- c("2 year", "3 year", "4 year", "no cubs", "with cubs", "with yrlng")
+```
+
+```{r}
+N <- 1500
+n_0 <- c(0.106*N,0.068*N,0.106*N,0.461*N,0.151*N,0.108*N)
+
+bears_good <- pop.projection(A_good, n_0, iterations = 100)
+bears_bad <- pop.projection(A_bad, n_0, iterations = 100)
+
+lambda(A_bad)
+lambda(A_good)
+
+stage.vector.plot(bears_good$stage.vectors, proportions = FALSE,legend.coords = FALSE)
+stage.vector.plot(bears_bad$stage.vectors, proportions = FALSE,legend.coords = FALSE)
 ```
 
